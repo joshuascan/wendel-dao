@@ -5,10 +5,12 @@ const App = () => {
   const address = useAddress();
   const connectWithMetamask = useMetamask();
   console.log("👋 Address:", address);
+
   const editionDrop = useEditionDrop(
     "0x235A1CbcF61b5EA255F1A5b26D6cD90448830fEB"
   );
   const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   useEffect(() => {
     if (!address) {
@@ -33,6 +35,22 @@ const App = () => {
     checkBalance();
   }, [address, editionDrop]);
 
+  const mintNft = async () => {
+    try {
+      setIsClaiming(true);
+      await editionDrop.claim("0", 1);
+      console.log(
+        `🌊 Successfully Minted! Check it out on OpenSea: https://testnets.opensea.io/assets/${editionDrop.getAddress()}/0`
+      );
+      setHasClaimedNFT(true);
+    } catch (error) {
+      setHasClaimedNFT(false);
+      console.error("Failed to mint NFT", error);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
+
   if (!address) {
     return (
       <div className="landing">
@@ -45,8 +63,11 @@ const App = () => {
   }
 
   return (
-    <div className="landing">
-      <h1>Wallet connected. Welcome to WendelDAO!</h1>
+    <div className="mint-nft">
+      <h1>Mint your free DAO Membership NFT</h1>
+      <button disabled={isClaiming} onClick={mintNft}>
+        {isClaiming ? "Minting..." : "Mint your NFT"}
+      </button>
     </div>
   );
 };
