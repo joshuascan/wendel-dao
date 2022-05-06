@@ -1,5 +1,10 @@
-import { useAddress, useMetamask, useEditionDrop } from "@thirdweb-dev/react";
-import { useState, useEffect } from "react";
+import {
+  useAddress,
+  useMetamask,
+  useEditionDrop,
+  useToken,
+} from "@thirdweb-dev/react";
+import { useState, useEffect, useMemo } from "react";
 
 const App = () => {
   const address = useAddress();
@@ -9,8 +14,63 @@ const App = () => {
   const editionDrop = useEditionDrop(
     "0x235A1CbcF61b5EA255F1A5b26D6cD90448830fEB"
   );
+  const token = useToken("0x2241f727BAcc72Cd520dd38023cb9e2A5C075bb9");
   const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [memberTokenAmounts, setMemberTokenAmounts] = useState([]);
+  const [memberAddresses, setMemberAddresses] = useState([]);
+
+  const shortenAddress = (str) => {
+    return str.substring(0, 6) + "..." + str.substring(str.length - 4);
+  };
+
+  useEffect(() => {
+    if (!hasClaimedNFT) {
+      return;
+    }
+
+    const getAllAddresses = async () => {
+      try {
+        const memberAddresses =
+          await editionDrop.history.getAllClaimerAddresses(0);
+        setMemberAddresses(memberAddresses);
+        console.log("🚀 Members addresses", memberAddresses);
+      } catch (error) {
+        console.error("Failed to get member list", error);
+      }
+    };
+    getAllAddresses();
+  }, [hasClaimedNFT, editionDrop.history]);
+
+  useEffect(() => {
+    if (!hasClaimedNFT) {
+      return;
+    }
+
+    const getAllBalances = async () => {
+      try {
+        const amounts = await token.history.getAllHolderBalances();
+        setMemberTokenAmounts(amounts);
+        console.log("👜 Amounts", amounts);
+      } catch (error) {
+        console.error("Failed to get member balances", error);
+      }
+    };
+    getAllBalances();
+  }, [hasClaimedNFT, token.history]);
+
+  const memberList = useMemo(() => {
+    return memberAddresses.map((address) => {
+      const member = memberTokenAmounts?.find(
+        ({ holder }) => holder === address
+      );
+
+      return {
+        address,
+        tokenAmount: member?.balance.displayValue || "0",
+      };
+    });
+  }, [memberAddresses, memberTokenAmounts]);
 
   useEffect(() => {
     if (!address) {
