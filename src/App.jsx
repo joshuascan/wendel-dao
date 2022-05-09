@@ -23,6 +23,7 @@ const App = () => {
   const vote = useVote("0x7Be803CD91310adba5A6187D3E48610Cb40bF6af");
   const [hasClaimedNFT, setHasClaimedNFT] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
+  const [treasuryBalance, setTreasuryBalance] = useState(null);
   const [memberTokenAmounts, setMemberTokenAmounts] = useState([]);
   const [memberAddresses, setMemberAddresses] = useState([]);
   const [proposals, setProposals] = useState([]);
@@ -105,6 +106,20 @@ const App = () => {
     };
     getAllBalances();
   }, [hasClaimedNFT, token.history]);
+
+  useEffect(() => {
+    const getTreasuryBalance = async () => {
+      try {
+        const balance = await vote.balanceOfToken(
+          "0x2241f727BAcc72Cd520dd38023cb9e2A5C075bb9"
+        );
+        setTreasuryBalance(balance.displayValue);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    getTreasuryBalance();
+  }, [vote]);
 
   const memberList = useMemo(() => {
     return memberAddresses.map((address) => {
@@ -249,6 +264,7 @@ const App = () => {
     return (
       <div className="member-page">
         <h1>WendelDAO Member Page</h1>
+        <h2>Treasury Balance: {treasuryBalance}</h2>
         <p>Congratulations on being a member</p>
         <div>
           <div>
